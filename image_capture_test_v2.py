@@ -24,6 +24,7 @@ def load_graph(model_file):
 
   return graph
  
+ # not used anymore
 def read_tensor_from_image_file(file_name, input_height=299, input_width=299,
 				input_mean=0, input_std=255):
   input_name = "file_reader"
@@ -46,7 +47,6 @@ def read_tensor_from_image_file(file_name, input_height=299, input_width=299,
   normalized = tf.divide(tf.subtract(resized, [input_mean]), [input_std])
   sess = tf.Session()
   result = sess.run(normalized)
-
   return result
   
 def load_labels(label_file):
@@ -64,6 +64,7 @@ label_file = "tf_files/retrained_labels.txt"
 input_layer = "input"
 output_layer = "final_result"
 graph = load_graph(model_file)
+
 input_height = 224
 input_width = 224
 input_mean = 128
@@ -75,12 +76,15 @@ for i in range(100):
 	start_x = int((width - desiredsize)/2)
 	start_y = int((height - desiredsize)/2)
 	crop_img = image[start_y:start_y+desiredsize, start_x:start_x+desiredsize]
-	cv2.imwrite('opencv.jpg', crop_img)
-	t = read_tensor_from_image_file("opencv.jpg",
-                                  input_height=input_height,
-                                  input_width=input_width,
-                                  input_mean=input_mean,
-                                  input_std=input_std)
+	
+	# adhere to TS graph input structure
+	numpy_frame = np.asarray(crop_img)
+	float_caster = tf.cast(numpy_frame, tf.float32)
+	dims_expander = tf.expand_dims(float_caster, 0);
+	resized = tf.image.resize_bilinear(dims_expander, [input_height, input_width])
+	normalized = tf.divide(tf.subtract(resized, [input_mean]), [input_std])
+	sess = tf.Session()
+	t = sess.run(normalized)
 	input_name = "import/" + input_layer
 	output_name = "import/" + output_layer
 	input_operation = graph.get_operation_by_name(input_name);
@@ -99,7 +103,4 @@ for i in range(100):
 	template = "{} (score={:0.5f})"
 	for i in top_k:
 		print(template.format(labels[i], results[i]))
-
-	os.remove("opencv.jpg")
-	
 del(camera)
