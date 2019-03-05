@@ -69,7 +69,7 @@ input_height = 224
 input_width = 224
 input_mean = 128
 input_std = 128
-  
+sess = tf.Session()
 for i in range(100):
 	return_value, image = camera.read()
 	height, width, channels = image.shape 
@@ -83,17 +83,17 @@ for i in range(100):
 	dims_expander = tf.expand_dims(float_caster, 0);
 	resized = tf.image.resize_bilinear(dims_expander, [input_height, input_width])
 	normalized = tf.divide(tf.subtract(resized, [input_mean]), [input_std])
-	sess = tf.Session()
 	t = sess.run(normalized)
+	
 	input_name = "import/" + input_layer
 	output_name = "import/" + output_layer
 	input_operation = graph.get_operation_by_name(input_name);
 	output_operation = graph.get_operation_by_name(output_name);
 	
-	with tf.Session(graph=graph) as sess:
+	with tf.Session(graph=graph) as sess2:
 		start = time.time()
-		results = sess.run(output_operation.outputs[0],
-				  {input_operation.outputs[0]: t})
+		results = sess2.run(output_operation.outputs[0],
+					  {input_operation.outputs[0]: t})
 		end=time.time()
 	results = np.squeeze(results)
 	top_k = results.argsort()[-5:][::-1]
