@@ -11,13 +11,13 @@ import sys
 import time
 
 import gc
-import objgraph
 
 import numpy as np
 import tensorflow as tf
 
 # memory debugging
 #from pympler.tracker import SummaryTracker
+#import objgraph
 
 def load_graph(model_file):
   graph = tf.Graph()
