@@ -10,8 +10,14 @@ import argparse
 import sys
 import time
 
+import gc
+import objgraph
+
 import numpy as np
 import tensorflow as tf
+
+# memory debugging
+#from pympler.tracker import SummaryTracker
 
 def load_graph(model_file):
   graph = tf.Graph()
@@ -58,50 +64,60 @@ def load_labels(label_file):
 
   
 camera = cv2.VideoCapture(0)
-desiredsize = 224
 model_file = "tf_files/retrained_graph.pb"
 label_file = "tf_files/retrained_labels.txt"
+graph = load_graph(model_file)
+labels = load_labels(label_file)
+desiredsize = 224
 input_layer = "input"
 output_layer = "final_result"
-graph = load_graph(model_file)
+input_name = "import/" + input_layer
+output_name = "import/" + output_layer
+input_operation = graph.get_operation_by_name(input_name);
+output_operation = graph.get_operation_by_name(output_name);
+template = "{} (score={:0.5f})"
+
 
 input_height = 224
 input_width = 224
 input_mean = 128
 input_std = 128
-sess = tf.Session()
-sess2 = tf.Session(graph=graph)
-for i in range(100):
-	return_value, image = camera.read()
-	height, width, channels = image.shape 
-	start_x = int((width - desiredsize)/2)
-	start_y = int((height - desiredsize)/2)
-	crop_img = image[start_y:start_y+desiredsize, start_x:start_x+desiredsize]
+while True:
+	# memory debugging
+	#tracker = SummaryTracker()
+	sess = tf.Session()
+	sess2 = tf.Session(graph=graph)
+	for i in range(100):
+		return_value, image = camera.read()
+		height, width, channels = image.shape 
+		start_x = int((width - desiredsize)/2)
+		start_y = int((height - desiredsize)/2)
+		crop_img = image[start_y:start_y+desiredsize, start_x:start_x+desiredsize]
+		
+		# adhere to TS graph input structure
+		float_caster = tf.cast(np.asarray(crop_img), tf.float32)
+		dims_expander = tf.expand_dims(float_caster, 0);
+		# don't need this, above code already crops to 224x224 
+		#resized = tf.image.resize_bilinear(dims_expander, [input_height, input_width])
+		normalized = tf.divide(tf.subtract(dims_expander, [input_mean]), [input_std])
+		t = sess.run(normalized)
 	
-	# adhere to TS graph input structure
-	numpy_frame = np.asarray(crop_img)
-	float_caster = tf.cast(numpy_frame, tf.float32)
-	dims_expander = tf.expand_dims(float_caster, 0);
-	resized = tf.image.resize_bilinear(dims_expander, [input_height, input_width])
-	normalized = tf.divide(tf.subtract(resized, [input_mean]), [input_std])
-	t = sess.run(normalized)
-	
-	input_name = "import/" + input_layer
-	output_name = "import/" + output_layer
-	input_operation = graph.get_operation_by_name(input_name);
-	output_operation = graph.get_operation_by_name(output_name);
-	
-	#with tf.Session(graph=graph) as sess2:
-	start = time.time()
-	results = sess2.run(output_operation.outputs[0],
-				  {input_operation.outputs[0]: t})
-	end=time.time()
-	results = np.squeeze(results)
-	top_k = results.argsort()[-5:][::-1]
-	labels = load_labels(label_file)
+		
+		#with tf.Session(graph=graph) as sess2:
+		start = time.time()
+		results = sess2.run(output_operation.outputs[0],
+					  {input_operation.outputs[0]: t})
+		end = time.time()
+		results = np.squeeze(results)
+		top_k = results.argsort()[-5:][::-1]
 
-	print('\nEvaluation time (1-image): {:.3f}s\n'.format(end-start))
-	template = "{} (score={:0.5f})"
-	for i in top_k:
-		print(template.format(labels[i], results[i]))
+		print('\nEvaluation time (1-image): {:.3f}s\n'.format(end-start))
+		for i in top_k:
+			print(template.format(labels[i], results[i]))
+	sess.close()
+	sess2.close()
+	# memory debugging
+	#gc.collect()
+	#objgraph.show_most_common_types()
+	#tracker.print_diff()
 del(camera)
