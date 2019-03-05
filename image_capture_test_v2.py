@@ -69,7 +69,7 @@ input_width = 224
 input_mean = 128
 input_std = 128
   
-while True:
+for i in range(100):
 	return_value, image = camera.read()
 	height, width, channels = image.shape 
 	start_x = int((width - desiredsize)/2)
