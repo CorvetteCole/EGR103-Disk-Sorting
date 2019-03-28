@@ -56,24 +56,24 @@ void loop() {
 
   
   // print out the angle for the servo motor
-  Serial.print("moving to 180 degrees...");
+  //Serial.print("moving to 180 degrees...");
 
    // Rotate CW 1/2 turn slowly
-  StepsRequired  =  STEPS_PER_OUT_REV / 2; 
-  stepperMotor1.setSpeed(100);   
-  stepperMotor1.step(StepsRequired);
+  //StepsRequired  =  STEPS_PER_OUT_REV / 2; 
+  //stepperMotor1.setSpeed(100);   
+  //stepperMotor1.step(StepsRequired);
 
   //stepperMotor2.setSpeed(100);   
   //stepperMotor2.step(StepsRequired);
   
   // set the servo position
-  servo1.write(180);
+  //servo1.write(180);
 
   // wait for the servo to get there
-  delay(1000);
+  //delay(1000);
 
     // print out the angle for the servo motor
-  Serial.print("moving to 0 degrees...");
+  //Serial.print("moving to 0 degrees...");
 
     // Rotate CCW 1/2 turn quickly
   StepsRequired  =  - STEPS_PER_OUT_REV / 2;   
@@ -84,8 +84,8 @@ void loop() {
   //stepperMotor2.step(StepsRequired);
   
   // set the servo position
-  servo1.write(0);
+  //servo1.write(0);
 
   // wait for the servo to get there
-  delay(1000);
+  //delay(1000);
 }
