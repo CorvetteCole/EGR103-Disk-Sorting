@@ -3,8 +3,6 @@ from __future__ import division
 from __future__ import print_function
 
 import cv2
-import subprocess
-import os
 
 import argparse
 import sys
@@ -15,7 +13,7 @@ import gc
 import numpy as np
 import tensorflow as tf
 
-# memory debugging
+# memory debuggingS
 #from pympler.tracker import SummaryTracker
 #import objgraph
 
@@ -114,6 +112,10 @@ while True:
 		print('\nEvaluation time (1-image): {:.3f}s\n'.format(end-start))
 		for i in top_k:
 			print(template.format(labels[i], results[i]))
+			print (top_k[0])
+			#print (results[top_k[0]])
+			#print (labels[top_k[0]])
+			
 	sess.close()
 	sess2.close()
 	# memory debugging
