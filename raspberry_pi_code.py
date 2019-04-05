@@ -15,14 +15,32 @@ import gc
 import numpy as np
 import tensorflow as tf
 
-# memory debuggingS
+def load_graph(model_file):
+  graph = tf.Graph()
+  graph_def = tf.GraphDef()
+
+  with open(model_file, "rb") as f:
+    graph_def.ParseFromString(f.read())
+  with graph.as_default():
+    tf.import_graph_def(graph_def)
+
+  return graph
+  
+def load_labels(label_file):
+  label = []
+  proto_as_ascii_lines = tf.gfile.GFile(label_file).readlines()
+  for l in proto_as_ascii_lines:
+    label.append(l.rstrip())
+  return label
+
+# memory debugging
 #from pympler.tracker import SummaryTracker
 #import objgraph
 
 # check the port the Arduino acquires by connecting and disconnecting it and seeing what is new in "ls /dev/tty*"
 port = "/dev/ttyACM0" 
 s1 = serial.Serial(port, 9600)
-s1.flushImput()
+s1.flushInput()
 
 camera = cv2.VideoCapture(0)
 model_file = "tf_files/retrained_graph.pb"
@@ -46,26 +64,8 @@ input_width = 224
 input_mean = 128
 input_std = 128
 
-def load_graph(model_file):
-  graph = tf.Graph()
-  graph_def = tf.GraphDef()
-
-  with open(model_file, "rb") as f:
-    graph_def.ParseFromString(f.read())
-  with graph.as_default():
-    tf.import_graph_def(graph_def)
-
-  return graph
-  
-def load_labels(label_file):
-  label = []
-  proto_as_ascii_lines = tf.gfile.GFile(label_file).readlines()
-  for l in proto_as_ascii_lines:
-    label.append(l.rstrip())
-  return label
-
 while True:
-	if s1.inWaitin() > 0:
+	if s1.inWaiting() > 0:
 		inputValue = s1.read(1)
 		
 		# if Arduino sends "1" over serial, it will trigger object classification
