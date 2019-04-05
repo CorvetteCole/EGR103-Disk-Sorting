@@ -65,7 +65,7 @@ input_mean = 128
 input_std = 128
 
 while True:
-	if s1.inWaitin() > 0:
+	if s1.inWaiting() > 0:
 		inputValue = s1.read(1)
 		
 		# if Arduino sends "1" over serial, it will trigger object classification
