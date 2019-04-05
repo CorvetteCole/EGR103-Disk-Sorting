@@ -4,8 +4,8 @@
 #include <Servo.h>
 #include <Stepper.h>
 
-int stepsPerRevolution = 4096 // 28BYJ-48 output shaft steps per rev
-int turnTableGearRatio = 4.1 // not exact, need to check on this
+int stepsPerRevolution = 4096; // 28BYJ-48 output shaft steps per rev
+int turnTableGearRatio = 4.1; // not exact, need to check on this
 
 int classifiedDisk;
 double roughnessSensorBackground;
@@ -32,20 +32,32 @@ void setup() {
   sorterStepper.setSpeed(700);
   Serial.begin(9600); 
   
-  double roughnessTotal;
+  // average background roughness sensor values to calibrate against ambient. Maybe switch to mode later
+  double roughnessTotal = 0;
   for (int i = 0; i < 10; i++){
-	  // read roughness sensor and add to roughnessTotal
-	  // delay time to let it read properly
+	  roughnessTotal += analogRead(A0); // read roughness sensor and add to roughnessTotal
+	  delay(50); // delay time to let it read properly
   }
   roughnessSensorBackground = roughnessTotal / 10.0;
-  
-  
 }
 
 void loop() {
 	// read roughness sensor to find value that is not background noise (read for at least like 10 times and find mode)
 	// if roughness sensor detects the transparent side of disk, set the below to true
-	bool shouldRotateDisk = false;
+	bool roughnessSensorTriggered = false;
+  bool shouldRotateDisk = false;
+	while (!roughnessSensorTriggered){
+		// if voltage difference is half a volt different than background, do stuff
+		if (abs(analogRead(A0) - roughnessSensorBackground > .5)){
+			roughnessSensorTriggered = true;
+			if (analogRead(A0) > 1.5) {
+        shouldRotateDisk = true;
+			}
+		}
+	}
+	roughnessSensorTriggered = false;
+	
+	
 	diskViewerServo.write(170); // open feeder servo
 	delay(200);                 // delay for disk to fall in
 	diskViewerServo.write(0);   // close feeder servo
@@ -54,7 +66,7 @@ void loop() {
 	if (shouldRotateDisk){
 		diskViewerStepper.step(stepsPerRevolution / 2);
 	}
-	Serial.write(1) // tell Raspberry Pi to start looking
+	Serial.write(1); // tell Raspberry Pi to start looking
 	while (!Serial.available()){
 		// delay for amount of time, then Arduino will check if serial is available after
 		delay(200);
@@ -64,11 +76,12 @@ void loop() {
 		// metal - 1
 		// sandpaper - 2
 		// wood - 3
-	int classifiedMaterial = Serial.pareInt();
+	int classifiedMaterial = Serial.parseInt();
 	Serial.flush();
 	
 	if (shouldRotateDisk){
 		diskViewerStepper.step(-stepsPerRevolution / 2);
+		shouldRotateDisk = false;
 	}
 	
 	// calculate and move stepper for sorter according to classifiedDisk result
@@ -82,6 +95,6 @@ void loop() {
 	}
 	
 	sorterServo.write(170); 	// open servo on disk holder
-	delay(200)					// delay for disk to come out
+	delay(200);					// delay for disk to come out
 	sorterServo.write(0);		// close servo on disk holder
 }
