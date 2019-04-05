@@ -15,7 +15,25 @@ import gc
 import numpy as np
 import tensorflow as tf
 
-# memory debuggingS
+def load_graph(model_file):
+  graph = tf.Graph()
+  graph_def = tf.GraphDef()
+
+  with open(model_file, "rb") as f:
+    graph_def.ParseFromString(f.read())
+  with graph.as_default():
+    tf.import_graph_def(graph_def)
+
+  return graph
+  
+def load_labels(label_file):
+  label = []
+  proto_as_ascii_lines = tf.gfile.GFile(label_file).readlines()
+  for l in proto_as_ascii_lines:
+    label.append(l.rstrip())
+  return label
+
+# memory debugging
 #from pympler.tracker import SummaryTracker
 #import objgraph
 
@@ -45,24 +63,6 @@ input_height = 224
 input_width = 224
 input_mean = 128
 input_std = 128
-
-def load_graph(model_file):
-  graph = tf.Graph()
-  graph_def = tf.GraphDef()
-
-  with open(model_file, "rb") as f:
-    graph_def.ParseFromString(f.read())
-  with graph.as_default():
-    tf.import_graph_def(graph_def)
-
-  return graph
-  
-def load_labels(label_file):
-  label = []
-  proto_as_ascii_lines = tf.gfile.GFile(label_file).readlines()
-  for l in proto_as_ascii_lines:
-    label.append(l.rstrip())
-  return label
 
 while True:
 	if s1.inWaitin() > 0:
