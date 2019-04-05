@@ -22,7 +22,7 @@ import tensorflow as tf
 # check the port the Arduino acquires by connecting and disconnecting it and seeing what is new in "ls /dev/tty*"
 port = "/dev/ttyACM0" 
 s1 = serial.Serial(port, 9600)
-s1.flushImput()
+s1.flushInput()
 
 camera = cv2.VideoCapture(0)
 model_file = "tf_files/retrained_graph.pb"
