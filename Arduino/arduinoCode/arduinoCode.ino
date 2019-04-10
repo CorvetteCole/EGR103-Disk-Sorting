@@ -50,6 +50,7 @@ void loop() {
 		// if voltage difference is half a volt different than background, do stuff
 		if (abs(analogRead(A0) - roughnessSensorBackground > .5)){
 			roughnessSensorTriggered = true;
+      // #TODO better detection of currently viewed side of disk
 			if (analogRead(A0) > 1.5) {
         shouldRotateDisk = true;
 			}
@@ -73,13 +74,14 @@ void loop() {
 	}
 	// get classification
 		// cloth - 0
-		// metal - 1
-		// sandpaper - 2
-		// wood - 3
+    // metal - 1
+    // sandpaper - 2
+    // wood - 3
 	int classifiedMaterial = Serial.parseInt();
 	Serial.flush();
 	
 	if (shouldRotateDisk){
+
 		diskViewerStepper.step(-stepsPerRevolution / 2);
 		shouldRotateDisk = false;
 	}
