@@ -32,7 +32,8 @@ void setup() {
   sorterStepper.setSpeed(700);
   Serial.begin(9600); 
   
-  // average background roughness sensor values to calibrate against ambient. Maybe switch to mode later
+  // average background roughness sensor values to calibrate against ambient. 
+  // maybe switch to mode later
   double roughnessTotal = 0;
   for (int i = 0; i < 10; i++){
 	  roughnessTotal += analogRead(A0); // read roughness sensor and add to roughnessTotal
@@ -45,14 +46,14 @@ void loop() {
 	// read roughness sensor to find value that is not background noise (read for at least like 10 times and find mode)
 	// if roughness sensor detects the transparent side of disk, set the below to true
 	bool roughnessSensorTriggered = false;
-  bool shouldRotateDisk = false;
+    bool shouldRotateDisk = false;
 	while (!roughnessSensorTriggered){
 		// if voltage difference is half a volt different than background, do stuff
 		if (abs(analogRead(A0) - roughnessSensorBackground > .5)){
 			roughnessSensorTriggered = true;
-      // #TODO better detection of currently viewed side of disk
+		// #TODO better detection of currently viewed side of disk
 			if (analogRead(A0) > 1.5) {
-        shouldRotateDisk = true;
+				shouldRotateDisk = true;
 			}
 		}
 	}
@@ -70,15 +71,32 @@ void loop() {
 	Serial.write(1); // tell Raspberry Pi to start looking
 	while (!Serial.available()){
 		// delay for amount of time, then Arduino will check if serial is available after
-		delay(200);
+		delay(50);
 	}
 	// get classification
-		// cloth - 0
+	// cloth - 0
     // metal - 1
     // sandpaper - 2
     // wood - 3
 	int classifiedMaterial = Serial.parseInt();
+	int confidence = Serial.parseInt();
 	Serial.flush();
+	
+	if (confidence < .95){
+		diskViewerStepper.step(-stepsPerRevolution / 2);
+		shouldRotateDisk = true;
+		Serial.write(1);
+		while (!Serial.available()){
+		// delay for amount of time, then Arduino will check if serial is available after
+		delay(50);
+		}
+		int newClassifiedMaterial = Serial.parseInt();
+		int newConfidence = Serial.parseInt();
+		Serial.flush();
+		if (newConfidence > confidence){
+			classifiedMaterial = newClassifiedMaterial;
+		}
+	}
 	
 	if (shouldRotateDisk){
 

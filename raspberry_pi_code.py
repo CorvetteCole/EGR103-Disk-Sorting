@@ -116,4 +116,5 @@ while True:
 			# sandpaper - 2
 			# wood - 3
 			s1.write(classification_number)
+			s1.write(confidence)
 del(camera)
