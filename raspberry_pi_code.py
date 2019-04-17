@@ -76,8 +76,9 @@ while True:
 			# look at image and run classification until a classification with more than 80% confidence is made
 			classification
 			classification_number
-			confidence = 0.0;
-			while confidence < 0.8:
+			confidence = 0.0
+			recognitionRan = 0;
+			while confidence < 0.8 || recognitionRan < 3:
 				return_value, image = camera.read()
 				height, width, channels = image.shape 
 				start_x = int((width - desiredsize)/2)
@@ -102,6 +103,7 @@ while True:
 				confidence = results[top_k[0]]
 				classification = labels[top_k[0]]
 				classification_number = top_k[0]
+				recognitionRan++
 			
 			print("Final classification made: ")
 			print(classification)
