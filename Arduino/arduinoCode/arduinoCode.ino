@@ -4,15 +4,15 @@
 #include <Servo.h>
 #include <Stepper.h>
 
-int stepsPerRevolution = 4096; // 28BYJ-48 output shaft steps per rev
-int turnTableGearRatio = 4.1; // not exact, need to check on this
+int stepsPerRevolution = 32 * 16.032; // 28BYJ-48 output shaft steps per rev
+int turnTableGearRatio = 4.34; // not exact, need to check on this
 
 int classifiedDisk;
 double roughnessSensorBackground;
 
 int sorterSteps;
 
-Servo diskViewerServo; 
+Servo feederServo; 
 Servo sorterServo; 
 Stepper diskViewerStepper(stepsPerRevolution, 6, 7, 8, 9);
 Stepper sorterStepper(stepsPerRevolution * turnTableGearRatio, 10, 11, 12, 13);
@@ -26,8 +26,10 @@ Stepper sorterStepper(stepsPerRevolution * turnTableGearRatio, 10, 11, 12, 13);
 int materialSteps[5] = {410, 1229, 2048, 2867, 3686};
 
 void setup() {
-  diskViewerServo.attach(2); 
+  feederServo.attach(5); 
+  feederServo.write(180);
   sorterServo.attach(3);
+  sorterServo.write(180);
   diskViewerStepper.setSpeed(700);
   sorterStepper.setSpeed(700);
   Serial.begin(9600); 
@@ -48,21 +50,26 @@ void loop() {
 	bool roughnessSensorTriggered = false;
     bool shouldRotateDisk = false;
 	while (!roughnessSensorTriggered){
-		// if voltage difference is half a volt different than background, do stuff
-		if (abs(analogRead(A0) - roughnessSensorBackground > .5)){
+		double avgSensorValue = 0;
+
+		for (int i = 0; i < 10; i++){
+			avgSensorValue += analogRead(A0);
+		}			
+		avgSensorValue = avgSensorValue / 10;
+		if (abs(avgSensorValue - roughnessSensorBackground) > .10){
 			roughnessSensorTriggered = true;
 		// #TODO better detection of currently viewed side of disk
-			if (analogRead(A0) > 1.5) {
-				shouldRotateDisk = true;
-			}
+		//	if (analogRead(A0) > 1.5) {
+		//		shouldRotateDisk = true;
+		//	}
 		}
 	}
 	roughnessSensorTriggered = false;
 	
 	
-	diskViewerServo.write(170); // open feeder servo
+	feederServo.write(150); // open feeder servo
 	delay(200);                 // delay for disk to fall in
-	diskViewerServo.write(0);   // close feeder servo
+	feederServo.write(180);   // close feeder servo
 	
 	delay(100);     // delay for disk to settle (may not be needed)
 	if (shouldRotateDisk){
@@ -78,6 +85,7 @@ void loop() {
     // metal - 1
     // sandpaper - 2
     // wood - 3
+	// carbon fiber - 4
 	int classifiedMaterial = Serial.parseInt();
 	int confidence = Serial.parseInt();
 	Serial.flush();
@@ -114,7 +122,7 @@ void loop() {
 		sorterSteps -= stepsPerRevolution * turnTableGearRatio;
 	}
 	
-	sorterServo.write(170); 	// open servo on disk holder
+	sorterServo.write(150); 	// open servo on disk holder
 	delay(200);					// delay for disk to come out
-	sorterServo.write(0);		// close servo on disk holder
+	sorterServo.write(180);		// close servo on disk holder
 }
