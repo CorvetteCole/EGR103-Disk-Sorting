@@ -3,7 +3,7 @@
 from PIL import Image
 import os, sys
 
-directory = 'wood'
+directory = 'carbon_fiber'
 
 path = os.path.join(os.getcwd(), directory)
 dirs = os.listdir( path )

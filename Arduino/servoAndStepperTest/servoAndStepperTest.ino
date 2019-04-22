@@ -21,7 +21,8 @@
 #include <Servo.h>
 #include <Stepper.h>
 
-Servo servo1;  // create a servo object
+Servo feederServo;  // create a servo object
+Servo sorterServo;
 
 int angle;   // variable to hold the angle for the servo motor
 
@@ -29,15 +30,18 @@ int angle;   // variable to hold the angle for the servo motor
 const float STEPS_PER_REV = 32; 
  
 //  Amount of Gear Reduction
-const float GEAR_RED = 64;
+const float GEAR_REDUCTION = 16.032;
+
+// Gearing of the sorter
+const float GEAR_SORTER_RATIO = 4.36;
  
 // Number of steps per geared output rotation
-const float STEPS_PER_OUT_REV = STEPS_PER_REV * GEAR_RED;
+const float STEPS_PER_OUT_REV = STEPS_PER_REV * GEAR_REDUCTION;
  
 // Define Variables
  
 // Number of Steps Required
-int StepsRequired;
+int stepsRequired;
  
 // Create Instance of Stepper Class
 // Specify Pins used for motor coils
@@ -48,7 +52,11 @@ Stepper stepperMotor1(STEPS_PER_REV, 6, 7, 8, 9);
 Stepper stepperMotor2(STEPS_PER_REV, 10, 11, 12, 13);
 
 void setup() {
-  servo1.attach(2); // attaches the servo on pin 9 to the servo object
+  feederServo.attach(5); 
+  feederServo.write(180);
+  sorterServo.attach(3);
+  sorterServo.write(180);
+
   Serial.begin(9600); // open a serial connection to your computer
 }
 
@@ -76,12 +84,66 @@ void loop() {
   //Serial.print("moving to 0 degrees...");
 
     // Rotate CCW 1/2 turn quickly
-  StepsRequired  =  - STEPS_PER_OUT_REV / 2;   
-  stepperMotor1.setSpeed(700);  
-  stepperMotor1.step(StepsRequired);
+  while (!Serial.available()){
+    delay(50);
+  }
+  int partCode = Serial.parseInt();
+  
+  
+  if (partCode == 0){  
+    Serial.print("f or r (forward/reverse):");
+    while (!Serial.available()){
+    delay(50);
+  }
+  char dir = Serial.read();
+  int motorDirection;
+  if (dir == 'f'){
+    motorDirection = 1;
+  } else {
+    motorDirection = -1;
+  }
+    Serial.print("\n moving sorter stepper 180 degrees \n");
+    stepsRequired  =  motorDirection * STEPS_PER_OUT_REV  * GEAR_SORTER_RATIO; 
+    stepperMotor1.setSpeed(700);  
+    stepperMotor1.step(stepsRequired);
+  } else if (partCode == 1){
+    Serial.print("f or r (forward/reverse):");
+    while (!Serial.available()){
+    delay(50);
+  }
+  char dir = Serial.read();
+  int motorDirection;
+  if (dir == 'f'){
+    motorDirection = 1;
+  } else {
+    motorDirection = -1;
+  }
+    Serial.print("\n moving disk holder stepper 360 degrees \n");
+    stepsRequired  =  (motorDirection * STEPS_PER_OUT_REV) / 2; 
+    stepperMotor2.setSpeed(700);  
+    stepperMotor2.step(stepsRequired);
+  } else if (partCode == 2 || partCode == 3){
+    Serial.print("angle for servo (150 is open, 180 is closed) : ");
+    while (!Serial.available()){
+    delay(50);
+    }
+  }
+  if (partCode == 2){
+  int angle = Serial.parseInt();
+    Serial.print("\n moving feeder servo ");
+    Serial.print(angle);
+    Serial.print(" degrees \n");
+    feederServo.write(angle);
+  } else if (partCode == 3){
+      int angle = Serial.parseInt();
+    Serial.print("\n moving sorter servo ");
+    Serial.print(angle);
+    Serial.print(" degrees \n");
+    sorterServo.write(angle);
+  }
 
   //stepperMotor2.setSpeed(700);  
-  //stepperMotor2.step(StepsRequired);
+  //stepperMotor2.step(stepsRequired);
   
   // set the servo position
   //servo1.write(0);
