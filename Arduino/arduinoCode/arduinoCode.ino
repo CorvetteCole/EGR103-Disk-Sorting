@@ -26,13 +26,13 @@ Stepper sorterStepper(stepsPerRevolution * turnTableGearRatio, 10, 11, 12, 13);
 int materialSteps[5] = {410, 1229, 2048, 2867, 3686};
 
 void setup() {
+  Serial.begin(9600); 
   feederServo.attach(5); 
   feederServo.write(180);
   sorterServo.attach(3);
   sorterServo.write(180);
   diskViewerStepper.setSpeed(700);
   sorterStepper.setSpeed(700);
-  Serial.begin(9600); 
   delay(10000);
   // average background roughness sensor values to calibrate against ambient. 
   // maybe switch to mode later
@@ -82,7 +82,7 @@ void loop() {
 	if (shouldRotateDisk){
 		diskViewerStepper.step(stepsPerRevolution / 2);
 	}
-	Serial.print('x'); // tell Raspberry Pi to start looking
+	Serial.println("x"); // tell Raspberry Pi to start looking
 	while (!Serial.available()){
 		// delay for amount of time, then Arduino will check if serial is available after
 		delay(50);
@@ -100,7 +100,7 @@ void loop() {
 	if (confidence < .95){
 		diskViewerStepper.step(-stepsPerRevolution / 2);
 		shouldRotateDisk = true;
-		Serial.print('x');
+		Serial.println("x");
 		while (!Serial.available()){
 		// delay for amount of time, then Arduino will check if serial is available after
 		delay(50);
