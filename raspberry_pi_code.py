@@ -56,8 +56,8 @@ input_operation = graph.get_operation_by_name(input_name);
 output_operation = graph.get_operation_by_name(output_name);
 template = "{} (score={:0.5f})"
 
-sess = tf.Session()
-sess2 = tf.Session(graph=graph)
+#sess = tf.Session()
+#sess2 = tf.Session(graph=graph)
 
 input_height = 224
 input_width = 224
@@ -65,55 +65,55 @@ input_mean = 128
 input_std = 128
 
 while True:
-	inputValue = s1.readline()
-	print inputValue
+	inputValue = s1.read()
+	print(inputValue)
 	# if Arduino sends "x" over serial, it will trigger object classification
 	if inputValue == "x":
-	
 		print("Arduino triggered object classification")
 
 		# look at image and run classification until a classification with more than 80% confidence is made
-		classification
-		classification_number
+		classification = ""
+		classification_number = 0
 		confidence = 0.0
-		recognitionRan = 0;
-		while confidence < 0.8 | recognitionRan < 3:
+		sess = tf.Session()
+		sess2 = tf.Session(graph=graph)
+		for i in range(10):
 			return_value, image = camera.read()
 			height, width, channels = image.shape 
 			start_x = int((width - desiredsize)/2)
 			start_y = int((height - desiredsize)/2)
 			crop_img = image[start_y:start_y + desiredsize, start_x:start_x + desiredsize]
-			
 			# adhere to TS graph input structure
 			float_caster = tf.cast(np.asarray(crop_img), tf.float32)
 			dims_expander = tf.expand_dims(float_caster, 0);
 			normalized = tf.divide(tf.subtract(dims_expander, [input_mean]), [input_std])
 			t = sess.run(normalized)
-		
-			
 			#with tf.Session(graph=graph) as sess2:
 			start = time.time()
 			results = sess2.run(output_operation.outputs[0],
-						  {input_operation.outputs[0]: t})
+					  {input_operation.outputs[0]: t})
 			end = time.time()
 			results = np.squeeze(results)
 			top_k = results.argsort()[-5:][::-1]
-
+			print('\nEvaluation time (1-image): {:.3f}s\n'.format(end-start))
+			for i in top_k:
+				print(template.format(labels[i], results[i]))
+				print (top_k[0])
 			confidence = results[top_k[0]]
 			classification = labels[top_k[0]]
 			classification_number = top_k[0]
-			recognitionRan+=1
-		
+		sess2.close()
+		sess.close()
 		print("Final classification made: ")
 		print(classification)
 		print(classification_number)
 		print(confidence)
-		
 		# send number corresponding to classification to Arduino
 		# cloth - 0
 		# metal - 1
 		# sandpaper - 2
 		# wood - 3
-		s1.write(classification_number)
-		s1.write(confidence)
+		s = str(classification_number)
+		s += str(int(confidence*100))
+		s1.write(s)
 del(camera)
