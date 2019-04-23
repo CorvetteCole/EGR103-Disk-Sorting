@@ -67,7 +67,7 @@ input_std = 128
 while True:
 	if s1.in_waiting > 0:
 		inputValue = s1.readline()
-		
+		print(inputValue)
 		# if Arduino sends "x" over serial, it will trigger object classification
 		if inputValue == 'x':
 		
