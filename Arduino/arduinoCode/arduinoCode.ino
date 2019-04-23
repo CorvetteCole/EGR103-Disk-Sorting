@@ -5,7 +5,7 @@
 #include <Stepper.h>
 
 int stepsPerRevolution = 32 * 16.032; // 28BYJ-48 output shaft steps per rev
-int turnTableGearRatio = 4.34; // not exact, need to check on this
+int turnTableGearRatio = 4.36; // not exact, need to check on this
 
 int classifiedDisk;
 double roughnessSensorBackground;
@@ -33,38 +33,45 @@ void setup() {
   diskViewerStepper.setSpeed(700);
   sorterStepper.setSpeed(700);
   Serial.begin(9600); 
-  
+  delay(20000);
   // average background roughness sensor values to calibrate against ambient. 
   // maybe switch to mode later
-  double roughnessTotal = 0;
-  for (int i = 0; i < 10; i++){
-	  roughnessTotal += analogRead(A0); // read roughness sensor and add to roughnessTotal
-	  delay(50); // delay time to let it read properly
-  }
-  roughnessSensorBackground = roughnessTotal / 10.0;
+//  double roughnessTotal = 0;
+//  for (int i = 0; i < 10; i++){
+//	  roughnessTotal += analogRead(A0); // read roughness sensor and add to roughnessTotal
+//	  delay(5); // delay time to let it read properly
+//  }
+//  roughnessSensorBackground = roughnessTotal / 10.0;
+//  Serial.print(roughnessSensorBackground);
+//  Serial.print("\n");
 }
 
 void loop() {
 	// read roughness sensor to find value that is not background noise (read for at least like 10 times and find mode)
 	// if roughness sensor detects the transparent side of disk, set the below to true
-	bool roughnessSensorTriggered = false;
+//	bool roughnessSensorTriggered = false;
     bool shouldRotateDisk = false;
-	while (!roughnessSensorTriggered){
-		double avgSensorValue = 0;
-
-		for (int i = 0; i < 10; i++){
-			avgSensorValue += analogRead(A0);
-		}			
-		avgSensorValue = avgSensorValue / 10;
-		if (abs(avgSensorValue - roughnessSensorBackground) > .10){
-			roughnessSensorTriggered = true;
-		// #TODO better detection of currently viewed side of disk
-		//	if (analogRead(A0) > 1.5) {
-		//		shouldRotateDisk = true;
-		//	}
-		}
-	}
-	roughnessSensorTriggered = false;
+//	while (!roughnessSensorTriggered){
+//		double avgSensorValue = 0;
+//
+//		for (int i = 0; i < 10; i++){
+//			avgSensorValue += analogRead(A0);
+//			delay(5);
+//		}			
+//		avgSensorValue = avgSensorValue / 10;
+//    Serial.print("\n");
+//    Serial.print(avgSensorValue);
+//		if (abs(avgSensorValue - roughnessSensorBackground) >= 1){
+//			roughnessSensorTriggered = true;
+//      Serial.print("roughnessSensorTriggered \n");
+//      Serial.print(avgSensorValue);
+//		// #TODO better detection of currently viewed side of disk
+//		//	if (analogRead(A0) > 1.5) {
+//		//		shouldRotateDisk = true;
+//		//	}
+//		}
+//	}
+//	roughnessSensorTriggered = false;
 	
 	
 	feederServo.write(150); // open feeder servo
