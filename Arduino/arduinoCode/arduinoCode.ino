@@ -33,7 +33,7 @@ void setup() {
   diskViewerStepper.setSpeed(700);
   sorterStepper.setSpeed(700);
   Serial.begin(9600); 
-  delay(20000);
+  delay(10000);
   // average background roughness sensor values to calibrate against ambient. 
   // maybe switch to mode later
 //  double roughnessTotal = 0;
