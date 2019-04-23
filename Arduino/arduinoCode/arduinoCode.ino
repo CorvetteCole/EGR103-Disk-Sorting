@@ -82,7 +82,7 @@ void loop() {
 	if (shouldRotateDisk){
 		diskViewerStepper.step(stepsPerRevolution / 2);
 	}
-	Serial.print(1); // tell Raspberry Pi to start looking
+	Serial.print('x'); // tell Raspberry Pi to start looking
 	while (!Serial.available()){
 		// delay for amount of time, then Arduino will check if serial is available after
 		delay(50);
@@ -100,7 +100,7 @@ void loop() {
 	if (confidence < .95){
 		diskViewerStepper.step(-stepsPerRevolution / 2);
 		shouldRotateDisk = true;
-		Serial.print(1);
+		Serial.print('x');
 		while (!Serial.available()){
 		// delay for amount of time, then Arduino will check if serial is available after
 		delay(50);
