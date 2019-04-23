@@ -64,6 +64,9 @@ input_width = 224
 input_mean = 128
 input_std = 128
 
+# send a to activate arduino
+s1.write("a")
+
 while True:
 	inputValue = s1.read()
 	print(inputValue)
