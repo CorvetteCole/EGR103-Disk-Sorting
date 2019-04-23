@@ -65,55 +65,56 @@ input_mean = 128
 input_std = 128
 
 while True:
-	inputValue = s1.read(1)
-	
-	# if Arduino sends "1" over serial, it will trigger object classification
-	if inputValue == 1:
-	
-		print("Arduino triggered object classification")
+	if ser.in_waiting > 0:
+		inputValue = s1.read()
+		
+		# if Arduino sends "1" over serial, it will trigger object classification
+		if inputValue == 1:
+		
+			print("Arduino triggered object classification")
 
-		# look at image and run classification until a classification with more than 80% confidence is made
-		classification
-		classification_number
-		confidence = 0.0
-		recognitionRan = 0;
-		while confidence < 0.8 | recognitionRan < 3:
-			return_value, image = camera.read()
-			height, width, channels = image.shape 
-			start_x = int((width - desiredsize)/2)
-			start_y = int((height - desiredsize)/2)
-			crop_img = image[start_y:start_y + desiredsize, start_x:start_x + desiredsize]
+			# look at image and run classification until a classification with more than 80% confidence is made
+			classification
+			classification_number
+			confidence = 0.0
+			recognitionRan = 0;
+			while confidence < 0.8 | recognitionRan < 3:
+				return_value, image = camera.read()
+				height, width, channels = image.shape 
+				start_x = int((width - desiredsize)/2)
+				start_y = int((height - desiredsize)/2)
+				crop_img = image[start_y:start_y + desiredsize, start_x:start_x + desiredsize]
+				
+				# adhere to TS graph input structure
+				float_caster = tf.cast(np.asarray(crop_img), tf.float32)
+				dims_expander = tf.expand_dims(float_caster, 0);
+				normalized = tf.divide(tf.subtract(dims_expander, [input_mean]), [input_std])
+				t = sess.run(normalized)
 			
-			# adhere to TS graph input structure
-			float_caster = tf.cast(np.asarray(crop_img), tf.float32)
-			dims_expander = tf.expand_dims(float_caster, 0);
-			normalized = tf.divide(tf.subtract(dims_expander, [input_mean]), [input_std])
-			t = sess.run(normalized)
-		
-			
-			#with tf.Session(graph=graph) as sess2:
-			start = time.time()
-			results = sess2.run(output_operation.outputs[0],
-						  {input_operation.outputs[0]: t})
-			end = time.time()
-			results = np.squeeze(results)
-			top_k = results.argsort()[-5:][::-1]
+				
+				#with tf.Session(graph=graph) as sess2:
+				start = time.time()
+				results = sess2.run(output_operation.outputs[0],
+							  {input_operation.outputs[0]: t})
+				end = time.time()
+				results = np.squeeze(results)
+				top_k = results.argsort()[-5:][::-1]
 
-			confidence = results[top_k[0]]
-			classification = labels[top_k[0]]
-			classification_number = top_k[0]
-			recognitionRan+=1
-		
-		print("Final classification made: ")
-		print(classification)
-		print(classification_number)
-		print(confidence)
-		
-		# send number corresponding to classification to Arduino
-		# cloth - 0
-		# metal - 1
-		# sandpaper - 2
-		# wood - 3
-		s1.write(classification_number)
-		s1.write(confidence)
+				confidence = results[top_k[0]]
+				classification = labels[top_k[0]]
+				classification_number = top_k[0]
+				recognitionRan+=1
+			
+			print("Final classification made: ")
+			print(classification)
+			print(classification_number)
+			print(confidence)
+			
+			# send number corresponding to classification to Arduino
+			# cloth - 0
+			# metal - 1
+			# sandpaper - 2
+			# wood - 3
+			s1.write(classification_number)
+			s1.write(confidence)
 del(camera)
