@@ -119,4 +119,7 @@ while True:
 		s = str(classification_number)
 		s += str(int(confidence*100))
 		s1.write(s)
+		s1.flushInput()
+		print("Data being sent to arduino: ")
+		print(s)
 del(camera)
